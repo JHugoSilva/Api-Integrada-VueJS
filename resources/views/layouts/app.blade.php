@@ -95,21 +95,25 @@
                 </div>
             </div>
         </nav>
-        @auth
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item">
-                        <a href="{{ route('home') }}">
-                            Home
-                        </a>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        {{ Route::currentRouteName(); }}
-                    </li>
-                </ol>
-            </nav>
-        @endauth
 
+        @auth
+        <div style="background-color: rgb(173,181,189);padding:15px;">
+            <div class="container">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item">
+                            <a href="{{ route('home') }}">
+                                Home
+                            </a>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">
+                            {{ Route::currentRouteName(); }}
+                        </li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+        @endauth
         <main class="py-4">
             @yield('content')
         </main>

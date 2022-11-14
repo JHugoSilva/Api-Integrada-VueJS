@@ -10,20 +10,20 @@
                                 <input-container-component titulo="ID" id="inputId" id-help="idHelp"
                                     texto-ajuda="Opcional. Informe o ID da Marca.">
                                     <input type="number" class="form-control" id="inputId" aria-describedby="idHelp"
-                                        placeholder="ID" />
+                                        placeholder="ID" v-model="busca.id"/>
                                 </input-container-component>
                             </div>
                             <div class="mb-3 col">
                                 <input-container-component titulo="Nome" id="inputNome" id-help="nomeHelp"
                                     texto-ajuda="Opcional. Informe o Nome da Marca.">
                                     <input type="text" class="form-control" id="inputNome" aria-describedby="nomeHelp"
-                                        placeholder="Informe o nome da marca" />
+                                        placeholder="Informe o nome da marca" v-model="busca.nome"/>
                                 </input-container-component>
                             </div>
                         </div>
                     </template>
                     <template slot="rodape">
-                        <button type="submit" class="btn btn-primary btn-sm">
+                        <button type="submit" class="btn btn-primary btn-sm" @click="pesquisar()">
                             Pesquisar
                         </button>
                     </template>
@@ -33,18 +33,41 @@
                 <!--Inicio card de relação de Marcas-->
                 <card-component titulo="Relação de Marcas">
                     <template v-slot:conteudo>
-                        <table-component :dados="marcas"></table-component>
+                        <table-component :dados="marcas.data"
+                            :visualizar = "{ visivel: true, dataToggle: 'modal', dataTarget: '#modalMarcaVisualizar'}"
+                            :atualizar = "true"
+                            :remover = "true"
+                            :titulos="{
+                            id: { titulo: 'ID', tipo: 'texto'},
+                            nome: { titulo: 'Nome', tipo: 'texto'},
+                            imagem: { titulo: 'Imagem', tipo: 'imagem'},
+                            created_at:  { titulo: 'Data de criação', tipo: 'data'}
+                        }"></table-component>
                     </template>
                     <template v-slot:rodape>
-                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#modalMarca">
-                            Adicionar
-                        </button>
+                        <div class="row">
+                            <div class="col-10">
+                                <paginate-component>
+                                    <ul class="pagination pagination-sm">
+                                        <li v-for="l, key in marcas.links" :key="key" :class="l.active ? 'page-item active' :'page-item'" @click="paginacao(l)">
+                                            <a class="page-link" v-html="l.label"></a>
+                                        </li>
+                                    </ul>
+                                </paginate-component>
+                            </div>
+                            <div class="col">
+                                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                    data-bs-target="#modalMarca">
+                                    Adicionar
+                                </button>
+                            </div>
+                        </div>
                     </template>
                 </card-component>
                 <!--Fim card de Relação de Marcas-->
             </div>
         </div>
+        <!--Modal inclusão de marcas-->
         <modal-component id="modalMarca" titulo="Adicionar marca">
             <template v-slot:alertas>
                 <alert-component tipo="success" :detalhes="transacaoDetalhes" titulo="Cadastro realizado com sucesso" v-if="transacaoStatus == 'adicionado'"></alert-component>
@@ -72,21 +95,37 @@
                 <button type="button" class="btn btn-primary" @click="salvar()">Salvar</button>
             </template>
         </modal-component>
+        <!--Fim modal inclusão de marcas-->
+        <!--Modal visualizar marca-->
+        <modal-component id="modalMarcaVisualizar" titulo="Visualizar marca">
+            <template v-slot:alertas>
+
+            </template>
+            <template v-slot:conteudo>
+
+            </template>
+            <template v-slot:rodape>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </template>
+        </modal-component>
+        <!--Fim do modal visualizar marca-->
     </div>
 </template>
 
 <script>
-import axios from 'axios'
 
     export default {
         data() {
             return {
                 urlBase: 'http://localhost:8000/api/v1/marca',
                 nomeMarca: '',
+                urlPaginacao: '',
+                urlFiltro: '',
                 arquivoImagem: [],
                 transacaoStatus: '',
                 transacaoDetalhes: {},
-                marcas: []
+                marcas: { data: [] },
+                busca: { id:'', nome:'' }
             }
         },
         computed: {
@@ -106,6 +145,32 @@ import axios from 'axios'
             this.carregarLista()
         },
         methods: {
+            pesquisar() {
+
+                let filtro = ''
+
+                for (let chave in this.busca) {
+                    if (this.busca[chave]) {
+                        if (filtro !== '') {
+                            filtro += ';'
+                        }
+                        filtro += chave + ':LIKE:' + this.busca[chave]
+                    }
+                }
+                if (filtro !== '') {
+                    this.urlPaginacao = 'page=1'
+                    this.urlFiltro = '&filtro='+filtro
+                } else {
+                    this.urlFiltro = ''
+                }
+                this.carregarLista()
+            },
+            paginacao(l) {
+                if (l.url) {
+                    this.urlPaginacao = l.url.split('?')[1]
+                    this.carregarLista()
+                }
+            },
             carregarLista() {
 
                 let config = {
@@ -115,7 +180,9 @@ import axios from 'axios'
                     }
                 }
 
-                axios.get(this.urlBase, config).
+                let url = this.urlBase + '?' + this.urlPaginacao + this.urlFiltro
+                console.log(url)
+                axios.get(url, config).
                     then(response=>{
                         this.marcas = response.data
                     })

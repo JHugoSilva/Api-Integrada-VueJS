@@ -36,4 +36,9 @@ class AbstractRepository {
         return $this->model->get();
     }
 
+    public function getResultadoPorPagina($numeroRegistroPorPagina)
+    {
+        return $this->model->paginate($numeroRegistroPorPagina);
+    }
+
 }
