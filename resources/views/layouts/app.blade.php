@@ -97,7 +97,7 @@
         </nav>
 
         @auth
-        <div style="background-color: rgb(173,181,189);padding:15px;">
+        <div style="padding:10px;">
             <div class="container">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">

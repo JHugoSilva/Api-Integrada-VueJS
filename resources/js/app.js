@@ -1,6 +1,7 @@
 require('./bootstrap');
 
 window.Vue = require('vue').default;
+import Vue from 'vue';
 import Vuex from 'vuex'
 
 Vue.component('login-component', require('./components/LoginComponent.vue').default);
@@ -15,10 +16,29 @@ Vue.component('paginate-component', require('./components/PaginateComponent.vue'
 
 Vue.use(Vuex)
 
+Vue.filter('formataDataTempoGlobal', function(d) {
+
+    if (!d) return ''
+
+    d = d.split('T')
+
+    let data = d[0]
+    let tempo = d[1]
+
+    data = data.split('-')
+    //Formatar Data
+    data = data[2] +'/'+ data[1] +'/'+ data[0]
+    //Formatar Tempo
+    tempo = tempo.split('.')
+    tempo = tempo[0]
+
+    return data + ' ' + tempo
+})
+
 const store = new Vuex.Store({
     state: {
         item: {},
-        transacao: { status: '', mensagem: '' }
+        transacao: { status: '', mensagem: '', dados: '' }
     }
 })
 

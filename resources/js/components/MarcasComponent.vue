@@ -151,17 +151,17 @@
         <!--Modal atualizar marca-->
         <modal-component id="modalMarcaAtualizar" titulo="Atualizar marca">
             <template v-slot:alertas>
-
+                <alert-component tipo="success" titulo="Transação realizada com sucesso" :detalhes="$store.state.transacao" v-if="$store.state.transacao.status == 'sucesso'"></alert-component>
+                <alert-component tipo="danger" titulo="Erro na transação" :detalhes="$store.state.transacao" v-if="$store.state.transacao.status == 'erro'"></alert-component>
             </template>
-            <template v-slot:conteudo v-if="$store.state.transacao.status != 'sucesso'">
+            <template v-slot:conteudo>
                 <div class="form-group">
                     <input-container-component titulo="Nome da Marca" id="atualizarNome" id-help="atualizarNomeHelp"
                         texto-ajuda="Nome da marca.">
                         <input type="text" class="form-control" id="atualizarNome" aria-describedby="atualizarNomeHelp"
-                            placeholder="Nome da marca" v-model="atualizarNome" />
+                            placeholder="Nome da marca" v-model="$store.state.item.nome" />
                     </input-container-component>
                 </div>
-
                 <div class="form-group">
                     <input-container-component titulo="Imagem" id="atualizarImagem" id-help="atualizarImagemHelp"
                         texto-ajuda="Selecione uma imagem PNG, JPEG, JPG">
@@ -172,7 +172,7 @@
             </template>
             <template v-slot:rodape>
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
-                <button type="button" class="btn btn-secondary btn-sm" @click="atualizar()" v-if="$store.state.transacao.status !== 'sucesso'">Atualizar</button>
+                <button type="button" class="btn btn-secondary btn-sm" @click="atualizar()">Atualizar</button>
             </template>
         </modal-component>
         <!--Fim do modal atualizar marca-->
@@ -195,25 +195,41 @@ export default {
             busca: { id: '', nome: '' }
         }
     },
-    computed: {
-        token() {
-
-            let token = document.cookie.split(';').find(indice => {
-                return indice.includes('token=')
-            })
-
-            token = token.split('=')[1]
-            token = 'Bearer ' + token
-
-            return token
-        }
-    },
     mounted() {
         this.carregarLista()
     },
     methods: {
         atualizar() {
-            console.log(this.$store.state.item)
+
+            let formData = new FormData()
+            formData.append('_method', 'patch')
+            formData.append('nome', this.$store.state.item.nome)
+
+            if (this.arquivoImagem[0]) {
+                formData.append('imagem', this.arquivoImagem[0])
+            }
+
+            let url = this.urlBase + '/' + this.$store.state.item.id
+
+            let config = {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                }
+            }
+
+            axios.post(url, formData, config)
+                .then(response => {
+                    this.$store.state.transacao.status = 'sucesso'
+                    this.$store.state.transacao.mensagem = 'Registro de marca atualizado com sucesso'
+                    this.carregarLista()
+                    atualizarImagem.value = ''
+                })
+                .catch(errors => {
+                    console.log(errors)
+                    this.$store.state.transacao.status = 'erro'
+                    this.$store.state.transacao.mensagem = errors.response.data.message
+                    this.$store.state.transacao.dados = errors.response.data.errors
+                })
         },
         remover() {
 
@@ -228,14 +244,7 @@ export default {
             let formData = new FormData()
             formData.append('_method', 'delete')
 
-            let config = {
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': this.token
-                }
-            }
-
-            axios.post(url, formData, config)
+            axios.post(url, formData)
                 .then(response => {
                     this.$store.state.transacao.status = 'sucesso'
                     this.$store.state.transacao.mensagem = response.data.msg
@@ -274,16 +283,8 @@ export default {
         },
         carregarLista() {
 
-            let config = {
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': this.token
-                }
-            }
-
             let url = this.urlBase + '?' + this.urlPaginacao + this.urlFiltro
-            console.log(url)
-            axios.get(url, config).
+            axios.get(url).
                 then(response => {
                     this.marcas = response.data
                 })
@@ -302,9 +303,7 @@ export default {
 
             let config = {
                 headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Accept': 'application/json',
-                    'Authorization': this.token
+                    'Content-Type': 'multipart/form-data'
                 }
             }
 
@@ -314,6 +313,8 @@ export default {
                     this.transacaoDetalhes = {
                         mensagem: 'ID do registro: ' + response.data.id
                     }
+                    this.carregarLista()
+                    this.urlBase + '?' + this.urlPaginacao
                 })
                 .catch(errors => {
                     this.transacaoStatus = 'erro'

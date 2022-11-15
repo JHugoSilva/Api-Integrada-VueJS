@@ -5,9 +5,7 @@
         <p>{{ detalhes.mensagem }}</p>
        <br>
        <ul v-if="detalhes.dados">
-        <li v-for="erros, key in detalhes.dados" :key="key">
-            {{ erros[0] }}
-        </li>
+        <li v-for="erros, key in detalhes.dados" :key="key">{{ erros[0] }}</li>
        </ul>
     </div>
 </template>
