@@ -144,6 +144,6 @@ class MarcaController extends Controller
         Storage::disk('public')->delete($marca->imagem);
 
         $marca = $marca->delete();
-        return response()->json('Marca apagada com sucesso', 200);
+        return response()->json(['msg' => 'Registro removido com sucesso'], 200);
     }
 }

@@ -17,7 +17,7 @@
         props: ['tipo', 'titulo', 'detalhes'],
         computed: {
             estilo() {
-            return 'alert alert-'+this.tipo
+                return 'alert alert-'+this.tipo
             }
         }
     }
